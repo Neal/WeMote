@@ -1,0 +1,22 @@
+{
+	"uuid": "238a567e-76d1-479e-829b-62cb78fe527d",
+	"shortName": "WeMote",
+	"longName": "WeMote",
+	"companyName": "Neal",
+	"versionCode": 1,
+	"versionLabel": "1.0",
+	"capabilities": [ "configurable" ],
+	"watchapp": {
+		"watchface": false
+	},
+	"appKeys": {
+		"index": 0,
+		"name": 1,
+		"host": 2,
+		"type": 3,
+		"state": 4
+	},
+	"resources": {
+		"media": []
+	}
+}
