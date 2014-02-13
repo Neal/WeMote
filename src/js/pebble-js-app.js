@@ -43,7 +43,7 @@ var WeMo = {
 		appMessageQueue.add({host:true});
 		appMessageQueue.send();
 	},
-	handleAPIResponse: function(res) {
+	success: function(res) {
 		if (res.model) res = [res];
 		appMessageQueue.clear();
 		var index = 0;
@@ -58,18 +58,29 @@ var WeMo = {
 		appMessageQueue.add({index:index});
 		appMessageQueue.send();
 	},
+	fail: function() {
+		appMessageQueue.clear();
+		appMessageQueue.add({name:true});
+		appMessageQueue.send();
+	},
 	toggle: function(index) {
 		if (!this.server) return this.noServerSet();
 		var xhr = new XMLHttpRequest();
 		xhr.open('POST', 'http://' + this.server + ':5000/api/device/' + encodeURIComponent(this.devices[index].name), true);
-		xhr.onload = function() { if (xhr.readyState == 4 && xhr.status == 200) WeMo.handleAPIResponse(JSON.parse(xhr.responseText)); };
+		xhr.onload = function() { WeMo.success(JSON.parse(xhr.responseText)); };
+		xhr.ontimeout = this.fail;
+		xhr.onerror = this.fail;
+		xhr.timeout = 10000;
 		xhr.send(null);
 	},
 	refresh: function() {
 		if (!this.server) return this.noServerSet();
 		var xhr = new XMLHttpRequest();
 		xhr.open('GET', 'http://' + this.server + ':5000/api/environment', true);
-		xhr.onload = function() { if (xhr.readyState == 4 && xhr.status == 200) WeMo.handleAPIResponse(JSON.parse(xhr.responseText)); };
+		xhr.onload = function() { WeMo.success(JSON.parse(xhr.responseText)); };
+		xhr.ontimeout = this.fail;
+		xhr.onerror = this.fail;
+		xhr.timeout = 10000;
 		xhr.send(null);
 	}
 };

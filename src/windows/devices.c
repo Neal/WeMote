@@ -11,6 +11,7 @@ static int num_devices = 0;
 static bool no_server = false;
 static bool no_devices = false;
 static bool out_failed = false;
+static bool conn_timeout = false;
 
 static void refresh();
 static uint16_t menu_get_num_sections_callback(struct MenuLayer *menu_layer, void *callback_context);
@@ -60,6 +61,7 @@ void devices_in_received_handler(DictionaryIterator *iter) {
 	if (index_tuple && name_tuple && host_tuple && type_tuple && state_tuple) {
 		no_server = false;
 		out_failed = false;
+		conn_timeout = false;
 		device_t device;
 		device.index = index_tuple->value->int16;
 		strncpy(device.name, name_tuple->value->cstring, sizeof(device.name) - 1);
@@ -75,6 +77,10 @@ void devices_in_received_handler(DictionaryIterator *iter) {
 	}
 	else if (host_tuple) {
 		no_server = true;
+		menu_layer_reload_data_and_mark_dirty(menu_layer);
+	}
+	else if (name_tuple) {
+		conn_timeout = true;
 		menu_layer_reload_data_and_mark_dirty(menu_layer);
 	}
 }
@@ -113,7 +119,7 @@ static int16_t menu_get_header_height_callback(struct MenuLayer *menu_layer, uin
 }
 
 static int16_t menu_get_cell_height_callback(struct MenuLayer *menu_layer, MenuIndex *cell_index, void *callback_context) {
-	if (out_failed || no_server || no_devices || num_devices == 0) {
+	if (out_failed || no_server || no_devices || conn_timeout) {
 		return 36;
 	}
 	return 50;
@@ -131,6 +137,8 @@ static void menu_draw_row_callback(GContext *ctx, const Layer *cell_layer, MenuI
 		graphics_draw_text(ctx, "No server set.", fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD), (GRect) { .origin = { 4, 4 }, .size = { PEBBLE_WIDTH - 8, 22 } }, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
 	} else if (no_devices) {
 		graphics_draw_text(ctx, "No devices found.", fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD), (GRect) { .origin = { 4, 4 }, .size = { PEBBLE_WIDTH - 8, 22 } }, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
+	} else if (conn_timeout) {
+		graphics_draw_text(ctx, "Connection timed out!", fonts_get_system_font(FONT_KEY_GOTHIC_18), (GRect) { .origin = { 4, 4 }, .size = { PEBBLE_WIDTH - 8, 44 } }, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
 	} else if (num_devices == 0) {
 		graphics_draw_text(ctx, "Loading devices...", fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD), (GRect) { .origin = { 4, 4 }, .size = { PEBBLE_WIDTH - 8, 22 } }, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
 	} else {
