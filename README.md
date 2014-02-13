@@ -4,6 +4,8 @@ WeMote is a remote app for the Pebble Smartwatch to *flip* your WeMo switches fr
 
 It requires the [Ouimeaux](http://ouimeaux.readthedocs.org/en/latest/index.html) REST API running on a computer on the network to be able to work. An update in the future **_may_** remove this requirement.
 
+_Much thanks to Ian McCracken for Ouimeaux._
+
 ## Running Ouimeaux REST API
 
 * Following instructions [here](http://ouimeaux.readthedocs.org/en/latest/installation.html) to install Ouimeaux.
