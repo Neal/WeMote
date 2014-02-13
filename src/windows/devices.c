@@ -134,16 +134,19 @@ static void menu_draw_row_callback(GContext *ctx, const Layer *cell_layer, MenuI
 	} else if (num_devices == 0) {
 		graphics_draw_text(ctx, "Loading devices...", fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD), (GRect) { .origin = { 4, 4 }, .size = { PEBBLE_WIDTH - 8, 22 } }, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
 	} else {
-		graphics_draw_text(ctx, devices[cell_index->row].name, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD), (GRect) { .origin = { 4, 2 }, .size = { 100, 20 } }, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
+		graphics_draw_text(ctx, devices[cell_index->row].name, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD), (GRect) { .origin = { 4, 2 }, .size = { 100, 22 } }, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
+		graphics_draw_text(ctx, devices[cell_index->row].host, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD), (GRect) { .origin = { 4, 24 }, .size = { PEBBLE_WIDTH - 8, 22 } }, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
 		graphics_draw_text(ctx, devices[cell_index->row].type, fonts_get_system_font(FONT_KEY_GOTHIC_18), (GRect) { .origin = { 4, 24 }, .size = { PEBBLE_WIDTH - 10, 20 } }, GTextOverflowModeFill, GTextAlignmentRight, NULL);
-		graphics_draw_text(ctx, devices[cell_index->row].host, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD), (GRect) { .origin = { 4, 24 }, .size = { PEBBLE_WIDTH - 8, 20 } }, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
 		graphics_draw_text(ctx, devices[cell_index->row].state, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), (GRect) { .origin = { 106, -3 }, .size = { 30, 26 } }, GTextOverflowModeFill, GTextAlignmentCenter, NULL);
 	}
 }
 
 static void menu_select_callback(struct MenuLayer *menu_layer, MenuIndex *cell_index, void *callback_context) {
-	if (num_devices == 0)
+	if (num_devices == 0) {
 		return;
+	}
+	strncpy(devices[cell_index->row].host, "Toggling...", sizeof(devices[cell_index->row].host) - 1);
+	menu_layer_reload_data_and_mark_dirty(menu_layer);
 	Tuplet index_tuple = TupletInteger(KEY_INDEX, cell_index->row);
 	DictionaryIterator *iter;
 	app_message_outbox_begin(&iter);
