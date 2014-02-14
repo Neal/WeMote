@@ -101,6 +101,7 @@ static void refresh() {
 	no_server = false;
 	no_devices = false;
 	out_failed = false;
+	conn_timeout = false;
 	menu_layer_set_selected_index(menu_layer, (MenuIndex) { .row = 0, .section = 0 }, MenuRowAlignBottom, false);
 	menu_layer_reload_data_and_mark_dirty(menu_layer);
 	app_message_outbox_send();
