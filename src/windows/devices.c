@@ -119,7 +119,7 @@ static int16_t menu_get_header_height_callback(struct MenuLayer *menu_layer, uin
 }
 
 static int16_t menu_get_cell_height_callback(struct MenuLayer *menu_layer, MenuIndex *cell_index, void *callback_context) {
-	if (out_failed || no_server || no_devices || conn_timeout) {
+	if (out_failed || no_server || no_devices || conn_timeout || num_devices == 0) {
 		return 36;
 	}
 	return 50;
@@ -143,8 +143,8 @@ static void menu_draw_row_callback(GContext *ctx, const Layer *cell_layer, MenuI
 		graphics_draw_text(ctx, "Loading devices...", fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD), (GRect) { .origin = { 4, 4 }, .size = { PEBBLE_WIDTH - 8, 22 } }, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
 	} else {
 		graphics_draw_text(ctx, devices[cell_index->row].name, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD), (GRect) { .origin = { 4, 2 }, .size = { 100, 22 } }, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
-		graphics_draw_text(ctx, devices[cell_index->row].host, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD), (GRect) { .origin = { 4, 24 }, .size = { PEBBLE_WIDTH - 8, 22 } }, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
-		graphics_draw_text(ctx, devices[cell_index->row].type, fonts_get_system_font(FONT_KEY_GOTHIC_18), (GRect) { .origin = { 4, 24 }, .size = { PEBBLE_WIDTH - 10, 20 } }, GTextOverflowModeFill, GTextAlignmentRight, NULL);
+		graphics_draw_text(ctx, devices[cell_index->row].host, fonts_get_system_font(FONT_KEY_GOTHIC_18), (GRect) { .origin = { 4, 24 }, .size = { PEBBLE_WIDTH - 8, 22 } }, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
+		graphics_draw_text(ctx, devices[cell_index->row].type, fonts_get_system_font(FONT_KEY_GOTHIC_18), (GRect) { .origin = { 4, 24 }, .size = { PEBBLE_WIDTH - 8, 22 } }, GTextOverflowModeFill, GTextAlignmentRight, NULL);
 		graphics_draw_text(ctx, devices[cell_index->row].state, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), (GRect) { .origin = { 106, -3 }, .size = { 30, 26 } }, GTextOverflowModeFill, GTextAlignmentCenter, NULL);
 	}
 }
