@@ -67,7 +67,7 @@ var WeMo = {
 		if (!this.server) return this.noServerSet();
 		var xhr = new XMLHttpRequest();
 		xhr.open('POST', 'http://' + this.server + ':5000/api/device/' + encodeURIComponent(this.devices[index].name), true);
-		xhr.onload = function() { WeMo.success(JSON.parse(xhr.responseText)); };
+		xhr.onload = function() { try { WeMo.success(JSON.parse(xhr.responseText)); } catch(e) { WeMo.fail(); } };
 		xhr.ontimeout = this.fail;
 		xhr.onerror = this.fail;
 		xhr.timeout = 10000;
@@ -77,7 +77,7 @@ var WeMo = {
 		if (!this.server) return this.noServerSet();
 		var xhr = new XMLHttpRequest();
 		xhr.open('GET', 'http://' + this.server + ':5000/api/environment', true);
-		xhr.onload = function() { WeMo.success(JSON.parse(xhr.responseText)); };
+		xhr.onload = function() { try { WeMo.success(JSON.parse(xhr.responseText)); } catch(e) { WeMo.fail(); } };
 		xhr.ontimeout = this.fail;
 		xhr.onerror = this.fail;
 		xhr.timeout = 10000;
