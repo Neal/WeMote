@@ -12,6 +12,8 @@ static bool no_server = false;
 static bool no_devices = false;
 static bool out_failed = false;
 static bool conn_timeout = false;
+static bool conn_error = false;
+static bool server_error = false;
 
 static void refresh();
 static uint16_t menu_get_num_sections_callback(struct MenuLayer *menu_layer, void *callback_context);
@@ -57,11 +59,26 @@ void devices_in_received_handler(DictionaryIterator *iter) {
 	Tuple *host_tuple = dict_find(iter, KEY_HOST);
 	Tuple *type_tuple = dict_find(iter, KEY_TYPE);
 	Tuple *state_tuple = dict_find(iter, KEY_STATE);
+	Tuple *error_tuple = dict_find(iter, KEY_ERROR);
 
-	if (index_tuple && name_tuple && host_tuple && type_tuple && state_tuple) {
+	if (error_tuple) {
+		if (strcmp(error_tuple->value->cstring, "no_server_set") != 0) {
+			no_server = true;
+		} else if (strcmp(error_tuple->value->cstring, "timeout") != 0) {
+			conn_timeout = true;
+		} else if (strcmp(error_tuple->value->cstring, "error") != 0) {
+			conn_error = true;
+		} else if (strcmp(error_tuple->value->cstring, "server_error") != 0) {
+			server_error = true;
+		}
+		menu_layer_reload_data_and_mark_dirty(menu_layer);
+	}
+	else if (index_tuple && name_tuple && host_tuple && type_tuple && state_tuple) {
 		no_server = false;
 		out_failed = false;
 		conn_timeout = false;
+		conn_error = false;
+		server_error = false;
 		device_t device;
 		device.index = index_tuple->value->int16;
 		strncpy(device.name, name_tuple->value->cstring, sizeof(device.name) - 1);
@@ -73,14 +90,6 @@ void devices_in_received_handler(DictionaryIterator *iter) {
 	else if (index_tuple) {
 		num_devices = index_tuple->value->int16;
 		no_devices = num_devices == 0;
-		menu_layer_reload_data_and_mark_dirty(menu_layer);
-	}
-	else if (host_tuple) {
-		no_server = true;
-		menu_layer_reload_data_and_mark_dirty(menu_layer);
-	}
-	else if (name_tuple) {
-		conn_timeout = true;
 		menu_layer_reload_data_and_mark_dirty(menu_layer);
 	}
 }
@@ -102,6 +111,8 @@ static void refresh() {
 	no_devices = false;
 	out_failed = false;
 	conn_timeout = false;
+	conn_error = false;
+	server_error = false;
 	menu_layer_set_selected_index(menu_layer, (MenuIndex) { .row = 0, .section = 0 }, MenuRowAlignBottom, false);
 	menu_layer_reload_data_and_mark_dirty(menu_layer);
 	app_message_outbox_send();
@@ -120,7 +131,7 @@ static int16_t menu_get_header_height_callback(struct MenuLayer *menu_layer, uin
 }
 
 static int16_t menu_get_cell_height_callback(struct MenuLayer *menu_layer, MenuIndex *cell_index, void *callback_context) {
-	if (out_failed || no_server || no_devices || conn_timeout || num_devices == 0) {
+	if (out_failed || no_server || no_devices || conn_timeout || conn_error || num_devices == 0) {
 		return 36;
 	}
 	return 50;
@@ -140,13 +151,17 @@ static void menu_draw_row_callback(GContext *ctx, const Layer *cell_layer, MenuI
 		graphics_draw_text(ctx, "No devices found.", fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD), (GRect) { .origin = { 4, 4 }, .size = { PEBBLE_WIDTH - 8, 22 } }, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
 	} else if (conn_timeout) {
 		graphics_draw_text(ctx, "Connection timed out!", fonts_get_system_font(FONT_KEY_GOTHIC_18), (GRect) { .origin = { 4, 4 }, .size = { PEBBLE_WIDTH - 8, 44 } }, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
+	} else if (conn_error) {
+		graphics_draw_text(ctx, "HTTP Error!", fonts_get_system_font(FONT_KEY_GOTHIC_18), (GRect) { .origin = { 4, 4 }, .size = { PEBBLE_WIDTH - 8, 44 } }, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
+	} else if (server_error) {
+		graphics_draw_text(ctx, "Ouimeaux error!", fonts_get_system_font(FONT_KEY_GOTHIC_18), (GRect) { .origin = { 4, 4 }, .size = { PEBBLE_WIDTH - 8, 44 } }, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
 	} else if (num_devices == 0) {
 		graphics_draw_text(ctx, "Loading devices...", fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD), (GRect) { .origin = { 4, 4 }, .size = { PEBBLE_WIDTH - 8, 22 } }, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
 	} else {
 		graphics_draw_text(ctx, devices[cell_index->row].name, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD), (GRect) { .origin = { 4, 2 }, .size = { 100, 22 } }, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
 		graphics_draw_text(ctx, devices[cell_index->row].host, fonts_get_system_font(FONT_KEY_GOTHIC_18), (GRect) { .origin = { 4, 24 }, .size = { PEBBLE_WIDTH - 8, 22 } }, GTextOverflowModeFill, GTextAlignmentLeft, NULL);
 		graphics_draw_text(ctx, devices[cell_index->row].type, fonts_get_system_font(FONT_KEY_GOTHIC_18), (GRect) { .origin = { 4, 24 }, .size = { PEBBLE_WIDTH - 8, 22 } }, GTextOverflowModeFill, GTextAlignmentRight, NULL);
-		graphics_draw_text(ctx, devices[cell_index->row].state, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), (GRect) { .origin = { 106, -3 }, .size = { 30, 26 } }, GTextOverflowModeFill, GTextAlignmentCenter, NULL);
+		graphics_draw_text(ctx, devices[cell_index->row].state, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), (GRect) { .origin = { 106, -3 }, .size = { 34, 26 } }, GTextOverflowModeFill, GTextAlignmentCenter, NULL);
 	}
 }
 

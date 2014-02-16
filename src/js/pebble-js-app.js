@@ -38,48 +38,62 @@ var appMessageQueue = {
 var WeMo = {
 	server: localStorage.getItem('server') || '',
 	devices: [],
-	noServerSet: function() {
+	error: function(error) {
 		appMessageQueue.clear();
-		appMessageQueue.add({host:true});
-		appMessageQueue.send();
-	},
-	success: function(res) {
-		if (res.model) res = [res];
-		appMessageQueue.clear();
-		var index = 0;
-		for (var d in res) {
-			var name = res[d].name.substring(0,32) || '';
-			var host = res[d].host.substring(0,32) || '';
-			var type = res[d].type.substring(0,16) || '';
-			var state = res[d].state ? 'ON' : 'OFF';
-			appMessageQueue.add({index:index++, name:name, host:host, type:type, state:state});
-			this.devices.push(res[d]);
-		}
-		appMessageQueue.add({index:index});
-		appMessageQueue.send();
-	},
-	fail: function() {
-		appMessageQueue.clear();
-		appMessageQueue.add({name:true});
+		appMessageQueue.add({error:error});
 		appMessageQueue.send();
 	},
 	toggle: function(index) {
-		if (!this.server) return this.noServerSet();
+		if (!this.server) return this.error('no_server_set');
 		var xhr = new XMLHttpRequest();
 		xhr.open('POST', 'http://' + this.server + ':5000/api/device/' + encodeURIComponent(this.devices[index].name), true);
-		xhr.onload = function() { try { WeMo.success(JSON.parse(xhr.responseText)); } catch(e) { WeMo.fail(); } };
-		xhr.ontimeout = this.fail;
-		xhr.onerror = this.fail;
+		xhr.onload = function() {
+			appMessageQueue.clear();
+			try {
+				var res = JSON.parse(xhr.responseText);
+				var name = res.name.substring(0,32) || '';
+				var host = res.host.substring(0,32) || '';
+				var type = res.type.substring(0,16) || '';
+				var state = res.state ? 'ON' : 'OFF';
+				appMessageQueue.add({index:index, name:name, host:host, type:type, state:state});
+				appMessageQueue.add({index:WeMo.devices.length});
+			} catch(e) {
+				appMessageQueue.add({index:index, name:WeMo.devices[index].name, host:'Error!', type:WeMo.devices[index].type, state:''});
+				appMessageQueue.add({index:WeMo.devices.length});
+			}
+			appMessageQueue.send();
+		};
+		xhr.ontimeout = function() { this.error('timeout'); };
+		xhr.onerror = function() { this.error('error'); };
 		xhr.timeout = 10000;
 		xhr.send(null);
 	},
 	refresh: function() {
-		if (!this.server) return this.noServerSet();
+		if (!this.server) return this.error('no_server_set');
+		this.devices = [];
 		var xhr = new XMLHttpRequest();
 		xhr.open('GET', 'http://' + this.server + ':5000/api/environment', true);
-		xhr.onload = function() { try { WeMo.success(JSON.parse(xhr.responseText)); } catch(e) { WeMo.fail(); } };
-		xhr.ontimeout = this.fail;
-		xhr.onerror = this.fail;
+		xhr.onload = function() {
+			appMessageQueue.clear();
+			try {
+				var res = JSON.parse(xhr.responseText);
+				var i = 0;
+				for (var r in res) {
+					var name = res[r].name.substring(0,32) || '';
+					var host = res[r].host.substring(0,32) || '';
+					var type = res[r].type.substring(0,16) || '';
+					var state = res[r].state ? 'ON' : 'OFF';
+					appMessageQueue.add({index:i++, name:name, host:host, type:type, state:state});
+					WeMo.devices.push(res[r]);
+				}
+				appMessageQueue.add({index:i});
+			} catch(e) {
+				appMessageQueue.add({error:'server_error'});
+			}
+			appMessageQueue.send();
+		};
+		xhr.ontimeout = function() { this.error('timeout'); };
+		xhr.onerror = function() { this.error('error'); };
 		xhr.timeout = 10000;
 		xhr.send(null);
 	}

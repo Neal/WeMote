@@ -14,7 +14,8 @@
 		"name": 1,
 		"host": 2,
 		"type": 3,
-		"state": 4
+		"state": 4,
+		"error": 5
 	},
 	"resources": {
 		"media": [

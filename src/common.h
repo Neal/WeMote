@@ -14,4 +14,5 @@ enum {
 	KEY_HOST = 0x2,
 	KEY_TYPE = 0x3,
 	KEY_STATE = 0x4,
+	KEY_ERROR = 0x5,
 };
