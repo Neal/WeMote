@@ -63,8 +63,8 @@ var WeMo = {
 			}
 			appMessageQueue.send();
 		};
-		xhr.ontimeout = function() { this.error('timeout'); };
-		xhr.onerror = function() { this.error('error'); };
+		xhr.ontimeout = function() { WeMo.error('timeout'); };
+		xhr.onerror = function() { WeMo.error('error'); };
 		xhr.timeout = 10000;
 		xhr.send(null);
 	},
@@ -92,8 +92,8 @@ var WeMo = {
 			}
 			appMessageQueue.send();
 		};
-		xhr.ontimeout = function() { this.error('timeout'); };
-		xhr.onerror = function() { this.error('error'); };
+		xhr.ontimeout = function() { WeMo.error('timeout'); };
+		xhr.onerror = function() { WeMo.error('error'); };
 		xhr.timeout = 10000;
 		xhr.send(null);
 	}
