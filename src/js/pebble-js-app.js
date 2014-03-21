@@ -108,7 +108,7 @@ Pebble.addEventListener('appmessage', function(e) {
 });
 
 Pebble.addEventListener('showConfiguration', function() {
-	var uri = 'http://neal.github.io/WeMote/configuration/index.html?server=' + encodeURIComponent(WeMo.server);
+	var uri = 'http://ineal.me/pebble/wemote/configuration?server=' + encodeURIComponent(WeMo.server);
 	Pebble.openURL(uri);
 });
 
